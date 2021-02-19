@@ -326,7 +326,7 @@ def train_model(model, data, nb_epoch = 0, batch_size = 1, lr_func = None, patie
 				# Run through training set
 				if verbose: print('Training...')
 				training_order = range(len(mols_train))
-				np.random.shuffle(training_order)
+				np.random.shuffle(list(training_order))
 				for j in training_order:
 					single_mol = mols_train[j]
 					single_y_as_array = np.reshape(y_train[j], (1, -1))
