@@ -299,7 +299,7 @@ def train_model(model, data, nb_epoch = 0, batch_size = 1, lr_func = None, patie
 	# Create learning rate function
 	if lr_func:
 		lr_func_string = 'def lr(epoch):\n    return {}\n'.format(lr_func)
-		exec lr_func_string
+		exec(lr_func_string)
 
 
 	# Fit (allows keyboard interrupts in the middle)
