@@ -1,4 +1,7 @@
 from __future__ import print_function
+import sys, os
+path = os.path.abspath(os.path.join('../..', ''))
+sys.path.append(path)
 from conv_qsar_fast.utils.parsing import input_to_bool
 from conv_qsar_fast.utils.parse_cfg import read_config
 import conv_qsar_fast.utils.reset_layers as reset_layers
