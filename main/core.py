@@ -320,8 +320,8 @@ def train_model(model, data, nb_epoch = 0, batch_size = 1, lr_func = None, patie
 			for i in range(nb_epoch):
 				this_loss = []
 				this_val_loss = []
-				if lr_func: model.optimizer.lr.set_value(lr(i))
-				print('Epoch {}/{}, lr = {}'.format(i + 1, nb_epoch, model.optimizer.lr.get_value()))
+				if lr_func: K.set_value(model.optimizer.lr, lr(i))#if lr_func: model.optimizer.lr.set_value(lr(i))
+				print('Epoch {}/{}, lr = {}'.format(i + 1, nb_epoch, K.get_value(model.optimizer.lr)))
 
 				# Run through training set
 				if verbose: print('Training...')
