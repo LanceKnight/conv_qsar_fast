@@ -2,7 +2,8 @@ from __future__ import print_function
 from conv_qsar_fast.utils.saving import save_model_history, save_model_history_manual
 from conv_qsar_fast.utils.neural_fp import sizeAttributeVectors
 from keras.models import Sequential, Model, model_from_json
-from keras.layers import Dense, Activation, Input, merge
+from keras.layers import Dense, Activation, Input
+from keras.layers.merge import Add
 from keras.layers.core import Flatten, Permute, Reshape, Dropout, Lambda
 from keras.layers.wrappers import TimeDistributed
 from keras.callbacks import LearningRateScheduler, EarlyStopping
@@ -65,9 +66,9 @@ def build_model(embedding_size = 512, lr = 0.01, optimizer = 'adam', depth = 2,
 	# Base model
 	if type(use_fp) == type(None):
 		F_atom, F_bond = sizeAttributeVectors(molecular_attributes = molecular_attributes)
-		mat_features = Input(shape = (None, F_atom), name = "feature matrix")
-		mat_adjacency = Input(shape = (None, None), name = "adjacency/self matrix")
-		mat_specialbondtypes = Input(shape = (None, F_bond), name = "special bond types")
+		mat_features = Input(shape = (None, F_atom), name = "feature_matrix")
+		mat_adjacency = Input(shape = (None, None), name = "adjacency/self_matrix")
+		mat_specialbondtypes = Input(shape = (None, F_bond), name = "special_bond_types")
 
 		# Lists to keep track of keras features
 		all_mat_features = [mat_features]
@@ -97,13 +98,13 @@ def build_model(embedding_size = 512, lr = 0.01, optimizer = 'adam', depth = 2,
 			output_contribs_byatom.append(
 				TimeDistributed(
 					Dense(embedding_size, activation = 'softmax'),
-					name = 'd{} out'.format(d),
+					name = 'd{}_out'.format(d),
 				)(all_mat_features[d])
 			)
 			if verbose: print('Added depth {} output contribution (still atom-wise)'.format(d))
 
 			output_contribs.append(
-				Lambda(sum_across_atoms, output_shape = sum_across_atoms_shape, name = "d{} out sum across atoms".format(d))(
+				Lambda(sum_across_atoms, output_shape = sum_across_atoms_shape, name = "d{}_out_sum_across_atoms".format(d))(
 					output_contribs_byatom[d]
 				)
 			)
@@ -115,7 +116,7 @@ def build_model(embedding_size = 512, lr = 0.01, optimizer = 'adam', depth = 2,
 				contribs_by_atom.append(
 					TimeDistributed(
 						Dense(inner_rep, activation = 'linear'), 
-						name = "d{} atom->atom".format(d),
+						name = "d{}_atom_to_atom".format(d),
 					)(all_mat_features[d])
 				)
 				if verbose: print('Calculated new atom features for each atom, d {}'.format(d))
@@ -123,12 +124,14 @@ def build_model(embedding_size = 512, lr = 0.01, optimizer = 'adam', depth = 2,
 
 
 				actual_contribs_for_atoms.append(
-					merge(
-						[contribs_by_atom[d], mat_adjacency], 
-						mode = mult_features_and_adj,
-						output_shape = mult_features_and_adj_shape,
-						name = "d{} multiply atom contribs and adj mat".format(d)
-					)
+					Lambda(lambda x: K.batch_dot(x[1], x[0]))([contribs_by_atom[d], mat_adjacency])
+				
+					# merge(
+						# [contribs_by_atom[d], mat_adjacency], 
+						# mode = mult_features_and_adj,
+						# output_shape = mult_features_and_adj_shape,
+						# name = "d{}_multiply_atom_contribs_and_adj_mat".format(d)
+					# )
 				)
 				if verbose: print('Multiplied new atom features by adj matrix, d = {}'.format(d))
 				if verbose: print('ndim: {}'.format(K.ndim(actual_contribs_for_atoms[-1])))
@@ -136,35 +139,36 @@ def build_model(embedding_size = 512, lr = 0.01, optimizer = 'adam', depth = 2,
 				actual_bond_contribs_for_atoms.append(
 					TimeDistributed(
 						Dense(inner_rep, activation = 'linear', use_bias = False),
-						name = "d{} get bond contributions to new atom features".format(d),
+						name = "d{}_get_bond_contributions_to_new_atom_features".format(d),
 					)(mat_specialbondtypes)
 				)
 				if verbose: print('Calculated bond effects on new atom features d = {}'.format(d))
 				if verbose: print('ndim: {}'.format(K.ndim(actual_bond_contribs_for_atoms[-1])))
 
 				unactivated_features.append(
-					merge(
-						[actual_contribs_for_atoms[d], actual_bond_contribs_for_atoms[d]], 
-						mode = 'sum', 
-						name = 'd{} combine atom and bond contributions to new atom features'.format(d),
-					)
+					Add()([actual_contribs_for_atoms[d], actual_bond_contribs_for_atoms[d]])
+					# merge(
+						# [actual_contribs_for_atoms[d], actual_bond_contribs_for_atoms[d]], 
+						# mode = 'sum', 
+						# name = 'd{}_combine_atom_and_bond_contributions_to_new_atom_features'.format(d),
+					# )
 				)
 				if verbose: print('Calculated summed features, unactivated, for d = {}'.format(d))
 				if verbose: print('ndim: {}'.format(K.ndim(unactivated_features[-1])))
 
 				all_mat_features.append(
-					Activation(hidden_activation, name = "d{} inner update activation".format(d))(unactivated_features[d])
+					Activation(hidden_activation, name = "d{}_inner_update_activation".format(d))(unactivated_features[d])
 				)
 				if verbose: print('Added activation layer for new atom features, d = {}'.format(d))
 				if verbose: print('ndim: {}'.format(K.ndim(all_mat_features[-1])))
 
 		if len(output_contribs) > 1:
-			FPs = merge(output_contribs, mode = 'sum', name = 'pool across depths')
+			FPs = Add()(output_contribs)#merge(output_contribs, mode = 'sum', name = 'pool_across_depths')
 		else:
 			FPs = output_contribs[0]
 
 	else:
-		FPs = Input(shape = (512,), name = "input fingerprint")
+		FPs = Input(shape = (512,), name = "input_fingerprint")
 
 	# # Are we using a convolutional embedding or a fingerprint representation?
 	# if type(use_fp) == type(None): # normal mode, use convolution
