@@ -309,7 +309,7 @@ def get_data_one(data_label = '', shuffle_seed = None, batch_size = 1,
 
 		# Define validation set as random 10% of training
 		training_indices = range(len(mols_train))
-		np.random.shuffle(training_indices)
+		np.random.shuffle(list(training_indices))
 		split = int(len(training_indices) * training_ratio)
 		mols_train,   mols_val    = [mols_train[i] for i in training_indices[:split]],   [mols_train[i] for i in training_indices[split:]]
 		y_train,      y_val       = [y_train[i] for i in training_indices[:split]],      [y_train[i] for i in training_indices[split:]]
