@@ -1,10 +1,10 @@
-import ConfigParser
+import configparser
 import sys
 
 def read_config(fpath):
 	'''This function reads a configuration file and returns an equivalent dictionary'''
 
-	config = ConfigParser.SafeConfigParser()
+	config = configparser.SafeConfigParser()
 	with open(fpath, 'r') as fid:
 		config.readfp(fid)
 	return config._sections
