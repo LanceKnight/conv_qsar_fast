@@ -119,7 +119,14 @@ if __name__ == '__main__':
 		# Train model
 		try:
 			print('...training model')
-			model.fit([x[0] for x in data[0]['mols']], data[0]['y'])
+			if kwargs['kernel'] not in ['tanimoto']:# this condition was added by Lance
+				model.fit([x[0] for x in data[0]['mols']], data[0]['y'])
+			else:
+				#print("using tanimoto train, written by Lance")
+				train_x = np.array([x[0] for x in data[0]['mols']])
+				train_y = np.array(data[0]['y'])
+				#print(train_x.shape)
+				model.fit(train_x, train_y)
 			print('...trained model')
 		except KeyboardInterrupt:
 			pass
