@@ -2,7 +2,8 @@
 QSAR/QSPR using descriptor-free molecular embedding
 
 ## Requirements
-This code relies on [Keras](http://keras.io/) for the machine learning framework, [Theano](http://deeplearning.net/software/theano/) for computations as its back-end, and [RDKit](http://www.rdkit.org/) for parsing molecules from SMILES strings. Plotting is done in [matplotlib](http://matplotlib.org/). All other required packages should be dependencies of Keras, Theano, or RDKit.
+This code was forked and modified to work with Python 3.6.12 by Lance
+This code relies on [Keras](http://keras.io/) (ver2.3.1)for the machine learning framework, [Theano](http://deeplearning.net/software/theano/) (ver1.0.4) for computations as its back-end, and [RDKit](http://www.rdkit.org/) for parsing molecules from SMILES strings. Plotting is done in [matplotlib](http://matplotlib.org/). All other required packages should be dependencies of Keras, Theano, or RDKit.
 
 ## Basic use
 This code implements the tensor-based convolutional embedding strategy described in __placeholder__ for QSAR/QSPR tasks. The model architecture, training schedule, and data source are defined in a configuration file and trained using a cross-validation (CV). The basic architecture is as follows:
@@ -21,6 +22,8 @@ python conv_qsar_fast/main/main_cv.py conv_qsar_fast/inputs/<input_file>.cfg
 ```
 
 Numerous example input files, corresponding the models described in __placeholder__ are included in `inputs`. These include models to be trained on full datasets, 5-fold CVs with internal validation and early stopping, 5-fold CVs without internal validation, models initialized with weights from other trained models, and multi-task models predicting on multiple data sets. Note that when using multi-task models, the `output_size` must be increased and the `loss` function must be `custom` to ensure `NaN` values are filtered out if not all inputs x have the full set of outputs y.
+
+Modification was made by Lance to make svm_cv.py and main_cv.py to work as described in the paper.
 
 ## Data sets
 There are four available data sets in this version of the code contained in `data`:
