@@ -3,6 +3,7 @@ QSAR/QSPR using descriptor-free molecular embedding
 
 ## Requirements
 This code was forked and modified to work with Python 3.6.12 by Lance
+
 This code relies on [Keras](http://keras.io/) (ver2.3.1)for the machine learning framework, [Theano](http://deeplearning.net/software/theano/) (ver1.0.4) for computations as its back-end, and [RDKit](http://www.rdkit.org/) for parsing molecules from SMILES strings. Plotting is done in [matplotlib](http://matplotlib.org/). All other required packages should be dependencies of Keras, Theano, or RDKit.
 
 ## Basic use
