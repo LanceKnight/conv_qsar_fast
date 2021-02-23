@@ -181,6 +181,7 @@ if __name__ == '__main__':
 				kwargs['batch_size'] = int(kwargs['batch_size'])
 			if 'patience' in kwargs:
 				kwargs['patience'] = int(kwargs['patience'])
+			print(f"kwargs:{kwargs}")
 			(model, loss, val_loss) = train_model(model, data, **kwargs)
 			print('...trained model')
 		except KeyboardInterrupt:

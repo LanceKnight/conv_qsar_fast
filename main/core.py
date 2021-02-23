@@ -15,7 +15,7 @@ import json
 import sys
 import os
 from tqdm import tqdm
-
+import math
 
 import keras.backend as K
 import theano.tensor as T
@@ -299,11 +299,12 @@ def train_model(model, data, nb_epoch = 0, batch_size = 1, lr_func = None, patie
 	print('{} to train on'.format(len(mols_train)))
 	print('{} to validate on'.format(len(mols_val)))
 	print('{} to test on'.format(len(smiles_val)))
-
+	print(f"lr_func:{lr_func}")
 	# Create learning rate function
+	print(f"lr_func:{lr_func}, type:{type(lr_func)}")
 	if lr_func:
 		lr_func_string = 'def lr(epoch):\n    return {}\n'.format(lr_func)
-		exec(lr_func_string)
+		exec(lr_func_string, globals())
 
 
 	# Fit (allows keyboard interrupts in the middle)
@@ -320,6 +321,10 @@ def train_model(model, data, nb_epoch = 0, batch_size = 1, lr_func = None, patie
 			for i in range(nb_epoch):
 				this_loss = []
 				this_val_loss = []
+				print(f"i:{i}")
+				print(f"current lr:{K.get_value(model.optimizer.lr)}")
+				a = lr(i)
+				print(f"lr{a}")
 				if lr_func: K.set_value(model.optimizer.lr, lr(i))#if lr_func: model.optimizer.lr.set_value(lr(i))
 				print('Epoch {}/{}, lr = {}'.format(i + 1, nb_epoch, K.get_value(model.optimizer.lr)))
 
