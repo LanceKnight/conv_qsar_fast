@@ -107,6 +107,9 @@ if __name__ == '__main__':
 
 	# Iterate through all folds
 	ref_fpath = fpath
+	MSE_lst = []
+	MAE_lst = []
+	SD_lst = []
 	for cv_fold in all_cv_folds:
 		print('Using CV fold {}'.format(cv_fold))
 		data_kwargs['cv_folds'] = cv_fold
@@ -129,8 +132,27 @@ if __name__ == '__main__':
 
 		print('...testing model')
 		tstamp = datetime.datetime.utcnow().strftime('%m-%d-%Y_%H-%M')
+		test_x = [x[0] for x in data[2]['mols']]
+		test_y = data[2]['y']
+		#print(f"test_x :{test_x}")
+		if kwargs['kernel'] not in ['tanimoto']:# this condition was added by Lance
+			predicted_y = model.predict(test_x)
+		else:
+			test_x = np.array(test_x)
+			predicted_y = model.predict(test_x)
+		#print(f"predict_y:{predict_y}")
+		
+		MSE = sum(pow((test_y - predicted_y),2))/len(test_y)
+		MAE = sum(abs(test_y - predicted_y))/len(test_y)
+		SD = statistics.stdev(test_y - predicted_y)
+		MSE_lst.append(MSE)
+		MAE_lst.append(MAE)
+		SD_lst.append(SD)
+	print(f"MSE:{MSE_lst}, mean_MSE: {statistics.mean(MSE_lst)}")
+	print(f"MAE:{MAE_lst}, mean_MAE: {statistics.mean(MAE_lst)}")
+	print(f"SD:{SD_lst}, mean_SD: {statistics.mean(SD_lst)}")
 		# Need to define predict_on_batch to be compatible
-		model.predict_on_batch = model.predict
-		data_withresiduals = test_model(model, data, fpath, tstamp = tstamp,
-			batch_size = 1)
-		print('...tested model')
+		# model.predict_on_batch = model.predict
+		# data_withresiduals = test_model(model, data, fpath, tstamp = tstamp,
+			# batch_size = 1)
+	print('...tested model')
